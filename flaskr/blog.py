@@ -46,6 +46,31 @@ def create():
     return render_template('blog/create.html')
 
 
+@bp.route('/createComment', methods=('GET', 'POST'))
+@login_required
+def createComment():
+    if request.method == 'POST':
+        comment = request.form['comment']
+        error = None
+
+        if not body:
+            error = 'Comment is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'INSERT INTO post (comment, author_id, post_id)'
+                ' VALUES (?, ?, ?)',
+                (comment, g.user['id'], g.post['id'])
+            )
+            db.commit()
+            return redirect(url_for('blog.index'))
+
+    return render_template('blog/createComment.html')
+
+
 def get_post(id, check_author=True):
     post = get_db().execute(
         'SELECT p.id, title, body, created, author_id, username'
