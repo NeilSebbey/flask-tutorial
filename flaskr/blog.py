@@ -61,9 +61,9 @@ def createComment():
         else:
             db = get_db()
             db.execute(
-                'INSERT INTO post (comment, author_id, post_id)'
+                'INSERT INTO comment (comment, post_id, author_id)'
                 ' VALUES (?, ?, ?)',
-                (comment, g.user['id'], g.post['id'])
+                (comment, g.post['id'], g.user['id'])
             )
             db.commit()
             return redirect(url_for('blog.index'))
@@ -82,8 +82,8 @@ def get_post(id, check_author=True):
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
-    if check_author and post['author_id'] != g.user['id']:
-        abort(403)
+    #if check_author and post['author_id'] != g.user['id']:
+    #    abort(403)
 
     return post
 
@@ -114,6 +114,13 @@ def update(id):
             return redirect(url_for('blog.index'))
 
     return render_template('blog/update.html', post=post)
+
+#
+@bp.route('/<int:id>/viewPost')
+def viewPost(id):
+    post = get_post(id)
+    return render_template('blog/viewPost.html', post=post)
+
 
 
 @bp.route('/<int:id>/delete', methods=('POST',))
