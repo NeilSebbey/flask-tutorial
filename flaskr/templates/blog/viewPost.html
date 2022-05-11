@@ -3,7 +3,7 @@
 {% block header %}
   <h1>{% block title %}Viewing Post: "{{ post['title'] }}"{% endblock %}</h1>
   {% if g.user %}
-    <a class="action" href="{{ url_for('blog.createComment') }}">New Comment</a>
+    <a class="action" href="{{ url_for('blog.createComment', id=post['id']) }}">New Comment</a>
     {% if g.user['id'] == post['author_id'] %}
        <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
     {% endif %}
@@ -20,6 +20,18 @@
 
       </header>
       <p class="body">{{ post['body'] }}</p>
+
+    {% for comment in comments %}
+        <article class="comments">
+            <div>
+              <p class="comments">{{ comment['comment'] }}</p>
+              <div class="about">Commented by {{ comment['username'] }} on {{ comment['created'].strftime('%Y-%m-%d') }}</div>
+            </div>
+        </article>
+        {% if not loop.last %}
+          <hr>
+        {% endif %}
+    {% endfor %}
     </article>
 
 {% endblock %}

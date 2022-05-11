@@ -29,3 +29,16 @@ solid #377ba8; }
 .content textarea { min-height: 12em; resize: vertical; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
+
+article.comments {
+  align-items: flex-start;
+  background-color: #e5e5ea;
+  color: #000;
+}
+
+article.comments:before {
+  border-bottom-right-radius: 0.8rem 0.7rem;
+  border-left: 1rem solid #e5e5ea;
+  left: -0.35rem;
+  transform: translate(0, -0.1rem);
+}

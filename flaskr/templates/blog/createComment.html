@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block content %}
-  <form method="post">
+    <form method="post">
     <label for="comment">Comment</label>
-    <textarea name="comment" id="comment">{{ request.form['comment'] }}</textarea>
+    <textarea name="comment" id="comment" required>{{ request.form['comment'] or post['comment'] }}</textarea>
     <input type="submit" value="Save">
   </form>
 {% endblock %}
