@@ -86,21 +86,9 @@ def get_post(id):
 
     return post
 
-def get_comment(id):
-    comment = get_db().execute(
-        'SELECT c.id, comment, post_id, created, author_id, username'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE c.id = ?',
-        (id,)
-    ).fetchone()
 
-    if comment is None:
-        abort(404, f"Comment id {id} doesn't exist.")
 
-    return comment
-
-def get_comments(id):
+def get_all_comments(id):
     db = get_db()
     comments = db.execute(
         'SELECT c.id, comment, c.post_id, c.created, c.author_id, username'
@@ -144,7 +132,7 @@ def update(id):
 @bp.route('/<int:id>/viewPost')
 def viewPost(id):
     post = get_post(id)
-    comments = get_comments(id)
+    comments = get_all_comments(id)
     return render_template('blog/viewPost.html', post=post, comments=comments)
 
 
