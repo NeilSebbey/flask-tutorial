@@ -42,4 +42,13 @@ def test_get_all_comments(client, app):
         assert result[0][1] == 'test comment 2'
         assert result[1][1] == 'test comment 1'
 
+def test_create_comment_in_invalid_post_id(client, auth, app):
+    auth.login()
+    assert client.get('/99/createComment').status_code == 404
+    client.post('/99/createComment', data={'comment': 'test 99'})
+
+    with app.app_context():
+        db = get_db()
+        count = db.execute('SELECT COUNT(id) FROM comment').fetchone()[0]
+        assert count == 2
 
