@@ -46,10 +46,15 @@ def create():
     return render_template('blog/create.html')
 
 
+# @app.route('<int:id>/createComment')
+# @bp.route('<int:id>/createComment/<int:parent_comment_id')
+# def test(id, parent_comment_id=None):
 @bp.route('/<int:id>/createComment', methods=('GET', 'POST'))
+# @bp.route('/<int:id>/createComment/<int:parent_comment_id>', methods=['POST'])
 @login_required
 def createComment(id):
     post = get_post(id)
+    parent_comment_id = request.args.get('parent_comment_id', None)
 
     if request.method == 'POST':
         comment = request.form['comment']
@@ -62,11 +67,20 @@ def createComment(id):
             flash(error)
         else:
             db = get_db()
-            db.execute(
-                'INSERT INTO comment (comment, post_id, author_id)'
-                ' VALUES (?, ?, ?)',
-                (comment, post['id'], g.user['id'])
-            )
+            if parent_comment_id is not None:
+                db.execute(
+                    'INSERT INTO comment (comment, post_id, author_id, parent_comment_id)'
+                    ' VALUES (?, ?, ?, ?)',
+                    (comment, post['id'], g.user['id'], parent_comment_id)
+                )
+
+            else :
+                db.execute(
+                    'INSERT INTO comment (comment, post_id, author_id)'
+                    ' VALUES (?, ?, ?)',
+                    (comment, post['id'], g.user['id'])
+                )
+
             db.commit()
             return redirect(url_for('blog.index'))
 
@@ -87,11 +101,25 @@ def get_post(id):
     return post
 
 
+def get_comment(id):
+    comment = get_db().execute(
+        'SELECT c.id, comment, post_id, created, author_id, username'
+        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' WHERE c.id = ?',
+        (id,)
+    ).fetchone()
+
+    if comment is None:
+        abort(404, f"Comment id {id} doesn't exist.")
+
+    return comment
+
 
 def get_all_comments(id):
     db = get_db()
     comments = db.execute(
-        'SELECT c.id, comment, c.post_id, c.created, c.author_id, username'
+        'SELECT c.id, comment, c.post_id, c.parent_comment_id, c.created, c.author_id, username'
         ' FROM comment c JOIN user u on c.author_id = u.id'
         ' WHERE c.post_id = ?'
         ' ORDER BY c.created DESC',
@@ -136,10 +164,47 @@ def viewPost(id):
     return render_template('blog/viewPost.html', post=post, comments=comments)
 
 
-
 @bp.route('/<int:id>/delete', methods=('POST',))
 @login_required
 def delete(id):
+    get_post(id)
+    db = get_db()
+    db.execute('DELETE FROM post WHERE id = ?', (id,))
+    db.commit()
+    return redirect(url_for('blog.index'))
+
+
+@bp.route('/<int:id>/editComment', methods=('GET', 'POST'))
+@login_required
+def edit_comment(id,comment_id):
+    post = get_post(id)
+    commentid = get_comment(comment_id)
+
+    if request.method == 'POST':
+        comment = request.form['comment']
+        error = None
+
+        if not comment:
+            error = 'Comment is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            db = get_db()
+            db.execute(
+                'UPDATE comment SET comment = ?'
+                ' WHERE id = ?',
+                (comment, id)
+            )
+            db.commit()
+            return redirect(url_for('blog.index'))
+
+    return render_template('blog/editComment.html', post=post,commentid=commentid)
+
+
+@bp.route('/<int:id>/deleteComment', methods=('POST',))
+@login_required
+def delete_comment(id):
     get_post(id)
     db = get_db()
     db.execute('DELETE FROM post WHERE id = ?', (id,))

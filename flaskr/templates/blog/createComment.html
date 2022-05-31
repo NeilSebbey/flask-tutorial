@@ -8,6 +8,7 @@
     <form method="post">
     <label for="comment">Comment</label>
     <textarea name="comment" id="comment" required>{{ request.form['comment'] or post['comment'] }}</textarea>
+    <input type="hidden" id="comment_parent_id" name="{{ comment_parent_id }}" value="{{ comment_parent_id }}">
     <input type="submit" value="Save">
   </form>
 {% endblock %}

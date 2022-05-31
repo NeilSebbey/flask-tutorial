@@ -25,7 +25,15 @@
         <article class="comments">
             <div>
               <p class="comments">{{ comment['comment'] }}</p>
+              <p>Parent comment ID: {{ comment['parent_comment_id'] }}</p>
               <div class="about">Commented by {{ comment['username'] }} on {{ comment['created'].strftime('%Y-%m-%d') }}</div>
+              {% if g.user %}
+                <a class="action" href="{{ url_for('blog.createComment', id=post['id'], parent_comment_id=comment.id ) }}">Reply</a>
+              {% endif %}
+
+            </div>
+            <div class="sub_comments">
+
             </div>
         </article>
         {% if not loop.last %}
