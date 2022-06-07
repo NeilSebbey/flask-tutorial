@@ -6,6 +6,35 @@ from werkzeug.exceptions import abort
 from flaskr.auth import login_required
 from flaskr.db import get_db
 
+
+class Comment():
+    def __init__(self, row, parent_comment_id=None):
+        self.row = row
+        self.parent_comment_id = parent_comment_id
+
+    # Computed property
+    @property
+    def replies(self):
+        replies_as_comments = list()
+        replies = self.get_all_replies(self.row['id'])
+        for reply in replies:
+            replies_as_comments.append(Comment(reply, parent_comment_id=self.row['id']))
+
+        return replies_as_comments
+
+    def get_all_replies(self, id):
+        db = get_db()
+        replies = db.execute(
+            'SELECT c.id, comment, c.post_id, c.parent_comment_id, c.created, c.author_id, username'
+            ' FROM comment c JOIN user u on c.author_id = u.id'
+            ' WHERE c.parent_comment_id = ?'
+            ' ORDER BY c.created DESC',
+            (id,)
+        ).fetchall()
+
+        return replies
+
+
 bp = Blueprint('blog', __name__)
 
 
@@ -74,7 +103,7 @@ def createComment(id):
                     (comment, post['id'], g.user['id'], parent_comment_id)
                 )
 
-            else :
+            else:
                 db.execute(
                     'INSERT INTO comment (comment, post_id, author_id)'
                     ' VALUES (?, ?, ?)',
@@ -121,12 +150,15 @@ def get_all_comments(id):
     comments = db.execute(
         'SELECT c.id, comment, c.post_id, c.parent_comment_id, c.created, c.author_id, username'
         ' FROM comment c JOIN user u on c.author_id = u.id'
-        ' WHERE c.post_id = ?'
+        ' WHERE c.post_id = ? AND c.parent_comment_id IS NULL'
         ' ORDER BY c.created DESC',
         (id,)
     ).fetchall()
 
     return comments
+
+
+
 
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
@@ -160,7 +192,12 @@ def update(id):
 @bp.route('/<int:id>/viewPost')
 def viewPost(id):
     post = get_post(id)
-    comments = get_all_comments(id)
+    comments_rows = get_all_comments(id)
+    comments = list()
+
+    for comment in comments_rows:
+        comments.append(Comment(comment))
+
     return render_template('blog/viewPost.html', post=post, comments=comments)
 
 
@@ -176,7 +213,7 @@ def delete(id):
 
 @bp.route('/<int:id>/editComment', methods=('GET', 'POST'))
 @login_required
-def edit_comment(id,comment_id):
+def edit_comment(id, comment_id):
     post = get_post(id)
     commentid = get_comment(comment_id)
 
@@ -199,7 +236,7 @@ def edit_comment(id,comment_id):
             db.commit()
             return redirect(url_for('blog.index'))
 
-    return render_template('blog/editComment.html', post=post,commentid=commentid)
+    return render_template('blog/editComment.html', post=post, commentid=commentid)
 
 
 @bp.route('/<int:id>/deleteComment', methods=('POST',))

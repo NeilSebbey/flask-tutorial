@@ -24,17 +24,25 @@
     {% for comment in comments %}
         <article class="comments">
             <div>
-              <p class="comments">{{ comment['comment'] }}</p>
-              <p>Parent comment ID: {{ comment['parent_comment_id'] }}</p>
-              <div class="about">Commented by {{ comment['username'] }} on {{ comment['created'].strftime('%Y-%m-%d') }}</div>
+              <p class="comments">{{ comment.row['comment'] }}</p>
+              <p>Parent comment ID: {{ comment.row['parent_comment_id'] }}</p>
+              <div class="about">Commented by {{ comment.row['username'] }} on {{ comment.row['created'].strftime('%Y-%m-%d') }}</div>
               {% if g.user %}
-                <a class="action" href="{{ url_for('blog.createComment', id=post['id'], parent_comment_id=comment.id ) }}">Reply</a>
+                <a class="action" href="{{ url_for('blog.createComment', id=post['id'], parent_comment_id=comment.row['id'] ) }}">Reply</a>
               {% endif %}
 
             </div>
-            <div class="sub_comments">
 
+            {%  for reply in comment.replies %}
+            <div class="replies">
+                <p class="replies">{{ reply.row['comment'] }}</p>
+              <p>Parent comment ID: {{ reply.row['parent_comment_id'] }}</p>
+              <div class="about">Commented by {{ reply.row['username'] }} on {{ reply.row['created'].strftime('%Y-%m-%d') }}</div>
+              {% if g.user %}
+                <a class="action" href="{{ url_for('blog.createComment', id=post['id'], parent_comment_id=comment.row['id'] ) }}">Reply</a>
+              {% endif %}
             </div>
+            {% endfor %}
         </article>
         {% if not loop.last %}
           <hr>
